@@ -27,11 +27,13 @@ public class ImageProcessor {
         int processors = Runtime.getRuntime().availableProcessors();
         int tasksPerProcessor = height / processors;
 
+        // Array to store threads for later joining
         Thread[] threads = new Thread[processors];
         for (int i = 0; i < processors; i++) {
             int startRow = i * tasksPerProcessor;
             int endRow = (i == processors - 1) ? height : (i + 1) * tasksPerProcessor;
 
+            // Create a thread for processing a portion of the image
             threads[i] = new Thread(() -> {
                 for (int y = startRow; y < endRow; y++) {
                     for (int x = 0; x < width; x++) {
@@ -48,13 +50,13 @@ public class ImageProcessor {
                     }
                 }
             });
-            threads[i].start();
+            threads[i].start(); // Start the thread
         }
 
-        // Wait for all threads to finish
+        // Wait for all threads to finish processing
         for (Thread thread : threads) {
             try {
-                thread.join();
+                thread.join(); // Wait for the thread to complete
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

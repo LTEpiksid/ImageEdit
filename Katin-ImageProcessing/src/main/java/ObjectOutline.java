@@ -24,16 +24,22 @@ class ObjectOutline {
         graphics.setColor(Color.BLACK);
         graphics.setStroke(new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 
+        // Create a thread pool executor with fixed number of threads
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+        // List to hold detected objects
         List<Shape> objects = new ArrayList<>();
 
+        // Calculate the height per thread for dividing the image
         int heightPerThread = originalImage.getHeight() / executor.getMaximumPoolSize();
 
+        // Divide the image and assign portions to threads for processing
         for (int i = 0; i < executor.getMaximumPoolSize(); i++) {
             int startY = i * heightPerThread;
             int endY = (i == executor.getMaximumPoolSize() - 1) ? originalImage.getHeight() : (i + 1) * heightPerThread;
             final int threadStartY = startY;
 
+            // Execute each portion of the image processing in a separate thread
             executor.execute(() -> {
                 List<Shape> threadObjects = ImageProcessorObject.findObjects(binaryImage, segmentedImage, threadStartY, endY);
                 synchronized (objects) {
@@ -42,8 +48,10 @@ class ObjectOutline {
             });
         }
 
+        // Shutdown the executor after all threads finish processing
         executor.shutdown();
         try {
+            // Wait for all threads to finish
             executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
